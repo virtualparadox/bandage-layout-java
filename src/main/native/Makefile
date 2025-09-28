@@ -107,7 +107,7 @@ $(OGDF_INSTALL_DIR)/lib/libOGDF.a: $(OGDF_SOURCE_DIR)
 			-DOGDF_USE_COIN=OFF \
             -DOGDF_BUILD_COIN=OFF \
             -DOGDF_BUILD_EXAMPLES=OFF \
-            -DOGDF_BUILD_TESTS=OFF
+            -DOGDF_BUILD_TESTS=OFF \
 			$(abspath $(OGDF_SOURCE_DIR))
 	@cd $(OGDF_BUILD_DIR) && $(MAKE_CMD) -j$(shell nproc 2>/dev/null || echo 4)
 	@cd $(OGDF_BUILD_DIR) && $(MAKE_CMD) install
