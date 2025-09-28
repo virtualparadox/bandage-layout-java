@@ -36,7 +36,7 @@ OGDF_INSTALL_DIR = $(BUILD_DIR)/ogdf-install
 TARGET_NATIVE_DIR = ../../../target/classes/native
 
 # OGDF version and URL
-OGDF_VERSION = main
+OGDF_VERSION = master
 OGDF_URL = https://github.com/ogdf/ogdf.git
 
 # JAVA_HOME detection
