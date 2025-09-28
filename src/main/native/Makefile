@@ -62,7 +62,7 @@ OGDF_INCLUDES = -I$(OGDF_INSTALL_DIR)/include \
                 -I$(OGDF_BUILD_DIR)/include
 
 ifeq ($(PLATFORM),windows)
-    OGDF_LIBS = $(OGDF_INSTALL_DIR)/lib/OGDF.lib
+    OGDF_LIBS = $(OGDF_INSTALL_DIR)/lib/libOGDF.a
 else
     OGDF_LIBS = -L$(OGDF_INSTALL_DIR)/lib \
                 -L$(OGDF_INSTALL_DIR)/lib64 \
