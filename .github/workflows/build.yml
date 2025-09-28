@@ -67,6 +67,11 @@ jobs:
         run: |
           echo "JAVA_HOME=$JAVA_HOME"
           make -C src/main/native
+      - name: List OGDF libs (Windows)
+        shell: msys2 {0}
+        run: |
+          echo "=== OGDF install lib contents ==="
+          ls -R src/main/native/build/ogdf-install/lib || true
       - name: Upload Windows native
         uses: actions/upload-artifact@v4
         with:
