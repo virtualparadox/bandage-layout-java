@@ -10,6 +10,7 @@ ifeq ($(OS),Windows_NT)
     CXXFLAGS = -std=c++17 -O2 -DNDEBUG -Wall
     LDFLAGS = -shared -static-libgcc -static-libstdc++
     CMAKE_GENERATOR = "MinGW Makefiles"
+    MAKE_CMD = mingw32-make
 else ifeq ($(UNAME_S),Linux)
     PLATFORM = linux
     CXX = g++
@@ -17,6 +18,7 @@ else ifeq ($(UNAME_S),Linux)
     CXXFLAGS = -std=c++17 -fPIC -O2 -DNDEBUG -Wall
     LDFLAGS = -shared
     CMAKE_GENERATOR = "Unix Makefiles"
+    MAKE_CMD = make
 else ifeq ($(UNAME_S),Darwin)
     PLATFORM = osx
     CXX = clang++
@@ -24,6 +26,7 @@ else ifeq ($(UNAME_S),Darwin)
     CXXFLAGS = -std=c++17 -fPIC -O2 -DNDEBUG -Wall
     LDFLAGS = -shared -undefined dynamic_lookup
     CMAKE_GENERATOR = "Unix Makefiles"
+    MAKE_CMD = make
 endif
 
 # Directories
@@ -57,12 +60,15 @@ else ifeq ($(PLATFORM),windows)
 endif
 
 # OGDF includes and libraries
-OGDF_INCLUDES = -I$(OGDF_INSTALL_DIR)/include \
-                -I$(OGDF_SOURCE_DIR)/include \
-                -I$(OGDF_BUILD_DIR)/include
+OGDF_INCLUDES = -I$(OGDF_INSTALL_DIR)/include -I$(OGDF_BUILD_DIR)/include -I$(OGDF_SOURCE_DIR)/include
 
 ifeq ($(PLATFORM),windows)
-    OGDF_LIBS = $(OGDF_INSTALL_DIR)/lib/libOGDF.a
+    # Windows builds typically produce OGDF.lib + OGDF.dll
+    OGDF_LIBS = $(OGDF_INSTALL_DIR)/lib/OGDF.lib
+    # fallback: try static .a if .lib is missing
+    ifneq ("$(wildcard $(OGDF_INSTALL_DIR)/lib/libOGDF.a)","")
+        OGDF_LIBS = $(OGDF_INSTALL_DIR)/lib/libOGDF.a
+    endif
 else
     OGDF_LIBS = -L$(OGDF_INSTALL_DIR)/lib \
                 -L$(OGDF_INSTALL_DIR)/lib64 \
@@ -94,7 +100,6 @@ $(OGDF_INSTALL_DIR)/lib/libOGDF.a: $(OGDF_SOURCE_DIR)
 	@mkdir -p $(OGDF_BUILD_DIR)
 	@cd $(OGDF_BUILD_DIR) && \
 		cmake -G $(CMAKE_GENERATOR) \
-			$(if $(filter $(PLATFORM),windows),-DCMAKE_MAKE_PROGRAM=mingw32-make,) \
 			-DCMAKE_BUILD_TYPE=Release \
 			-DCMAKE_INSTALL_PREFIX=$(abspath $(OGDF_INSTALL_DIR)) \
 			-DCMAKE_CXX_STANDARD=17 \
@@ -102,8 +107,8 @@ $(OGDF_INSTALL_DIR)/lib/libOGDF.a: $(OGDF_SOURCE_DIR)
 			-DOGDF_USE_COIN=OFF \
 			-DOGDF_MEMORY_POOL_NTS=ON \
 			$(abspath $(OGDF_SOURCE_DIR))
-	@cd $(OGDF_BUILD_DIR) && $(MAKE) -j$(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
-	@cd $(OGDF_BUILD_DIR) && $(MAKE) install
+	@cd $(OGDF_BUILD_DIR) && $(MAKE_CMD) -j$(shell nproc 2>/dev/null || echo 4)
+	@cd $(OGDF_BUILD_DIR) && $(MAKE_CMD) install
 	@echo "OGDF build completed!"
 
 # Create build directory
@@ -164,7 +169,7 @@ help:
 	@echo ""
 	@echo "The build process will:"
 	@echo "  1. Download OGDF $(OGDF_VERSION) from GitHub"
-	@echo "  2. Build OGDF with CMake (PIC enabled for shared libs)"
+	@echo "  2. Build OGDF with CMake and install it"
 	@echo "  3. Compile and link the JNI wrapper"
 	@echo "  4. Copy the native lib into target/classes/native (so Maven includes it)"
 
