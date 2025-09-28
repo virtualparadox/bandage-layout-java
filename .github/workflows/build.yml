@@ -68,6 +68,7 @@ jobs:
           echo "JAVA_HOME=$JAVA_HOME"
           make -C src/main/native
       - name: List OGDF libs (Windows)
+        if: always()
         shell: msys2 {0}
         run: |
           echo "=== OGDF install lib contents ==="
