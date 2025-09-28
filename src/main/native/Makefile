@@ -1,5 +1,4 @@
-# Self-contained OGDF JNI Build for Bandage Layout
-# This Makefile automatically downloads and builds OGDF from source
+# Self-contained OGDF JNI Build for Bandage Layout (2025 edition)
 
 # Detect platform
 UNAME_S := $(shell uname -s)
@@ -37,7 +36,7 @@ OGDF_INSTALL_DIR = $(BUILD_DIR)/ogdf-install
 TARGET_NATIVE_DIR = ../../../target/classes/native
 
 # OGDF version and URL
-OGDF_VERSION = latest-release
+OGDF_VERSION = main
 OGDF_URL = https://github.com/ogdf/ogdf.git
 
 # JAVA_HOME detection
@@ -60,20 +59,12 @@ else ifeq ($(PLATFORM),windows)
 endif
 
 # OGDF includes and libraries
-OGDF_INCLUDES = -I$(OGDF_INSTALL_DIR)/include -I$(OGDF_BUILD_DIR)/include -I$(OGDF_SOURCE_DIR)/include
+OGDF_INCLUDES = -I$(OGDF_BUILD_DIR)/include/ogdf-release -I$(OGDF_SOURCE_DIR)/include
 
 ifeq ($(PLATFORM),windows)
-    # Windows builds typically produce OGDF.lib + OGDF.dll
-    OGDF_LIBS = $(OGDF_INSTALL_DIR)/lib/OGDF.lib
-    # fallback: try static .a if .lib is missing
-    ifneq ("$(wildcard $(OGDF_INSTALL_DIR)/lib/libOGDF.a)","")
-        OGDF_LIBS = $(OGDF_INSTALL_DIR)/lib/libOGDF.a
-    endif
+    OGDF_LIBS = $(OGDF_BUILD_DIR)/OGDF.lib
 else
-    OGDF_LIBS = -L$(OGDF_INSTALL_DIR)/lib \
-                -L$(OGDF_INSTALL_DIR)/lib64 \
-                -L$(OGDF_INSTALL_DIR)/lib/x86_64-linux-gnu \
-                -lOGDF
+    OGDF_LIBS = -L$(OGDF_BUILD_DIR) -lOGDF
 endif
 
 # Source files
@@ -84,7 +75,7 @@ JNI_OBJECTS = $(BUILD_DIR)/BandageLayoutJNI.o
 all: $(BUILD_DIR)/$(JNI_LIB)
 	@echo "Build completed: $(JNI_LIB)"
 
-# Download OGDF from Git
+# Download OGDF
 $(OGDF_SOURCE_DIR):
 	@echo "Downloading OGDF $(OGDF_VERSION) from Git..."
 	@mkdir -p $(BUILD_DIR)
@@ -94,8 +85,8 @@ $(OGDF_SOURCE_DIR):
 		echo "OGDF source already exists"; \
 	fi
 
-# Build OGDF
-$(OGDF_INSTALL_DIR)/lib/libOGDF.a: $(OGDF_SOURCE_DIR)
+# Build OGDF (without COIN, no tests/examples)
+$(OGDF_BUILD_DIR)/OGDF.lib $(OGDF_BUILD_DIR)/libOGDF.a: $(OGDF_SOURCE_DIR)
 	@echo "Building OGDF..."
 	@mkdir -p $(OGDF_BUILD_DIR)
 	@cd $(OGDF_BUILD_DIR) && \
@@ -104,75 +95,32 @@ $(OGDF_INSTALL_DIR)/lib/libOGDF.a: $(OGDF_SOURCE_DIR)
 			-DCMAKE_INSTALL_PREFIX=$(abspath $(OGDF_INSTALL_DIR)) \
 			-DCMAKE_CXX_STANDARD=17 \
 			-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-			-DOGDF_USE_COIN=OFF \
-            -DOGDF_BUILD_COIN=OFF \
-            -DOGDF_BUILD_EXAMPLES=OFF \
-            -DOGDF_BUILD_TESTS=OFF \
+			-DBUILD_SHARED_LIBS=ON \
+			-DOGDF_SEPARATE_TESTS=OFF \
+			-DOGDF_WARNING_ERRORS=OFF \
 			$(abspath $(OGDF_SOURCE_DIR))
 	@cd $(OGDF_BUILD_DIR) && $(MAKE_CMD) -j$(shell nproc 2>/dev/null || echo 4)
-	@cd $(OGDF_BUILD_DIR) && $(MAKE_CMD) install
 	@echo "OGDF build completed!"
 
-# Create build directory
-$(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
-
 # Compile JNI wrapper
-$(JNI_OBJECTS): $(JNI_SOURCES) $(OGDF_INSTALL_DIR)/lib/libOGDF.a | $(BUILD_DIR)
+$(JNI_OBJECTS): $(JNI_SOURCES) | $(OGDF_BUILD_DIR)/OGDF.lib $(BUILD_DIR)
 	@echo "Compiling JNI wrapper..."
 	$(CXX) $(CXXFLAGS) $(JNI_INCLUDES) $(OGDF_INCLUDES) \
 		-c $(JNI_SOURCES) -o $(JNI_OBJECTS)
 
-# Link library
+# Link JNI library
 $(BUILD_DIR)/$(JNI_LIB): $(JNI_OBJECTS)
 	@echo "Linking JNI library..."
-	$(CXX) $(LDFLAGS) $(JNI_OBJECTS) $(OGDF_LIBS) \
-		-o $(BUILD_DIR)/$(JNI_LIB)
+	$(CXX) $(LDFLAGS) $(JNI_OBJECTS) $(OGDF_LIBS) -o $(BUILD_DIR)/$(JNI_LIB)
 
-	# Copy to Maven target/classes/native directory
+	# Copy into Maven target/classes/native
 	mkdir -p $(TARGET_NATIVE_DIR)
 	cp $(BUILD_DIR)/$(JNI_LIB) $(TARGET_NATIVE_DIR)/
 	@echo "JNI library copied to $(TARGET_NATIVE_DIR): $(JNI_LIB)"
 
-# Clean everything including OGDF
+# Clean all
 clean:
 	rm -rf $(BUILD_DIR)
 	rm -rf $(TARGET_NATIVE_DIR)
 
-# Clean only JNI build artifacts (keep OGDF)
-clean-jni:
-	rm -f $(JNI_OBJECTS) $(BUILD_DIR)/$(JNI_LIB)
-	rm -rf $(TARGET_NATIVE_DIR)
-
-# Force rebuild of OGDF
-rebuild-ogdf:
-	rm -rf $(OGDF_BUILD_DIR) $(OGDF_INSTALL_DIR)
-	$(MAKE) $(OGDF_INSTALL_DIR)/lib/libOGDF.a
-
-# Check prerequisites
-check-deps:
-	@echo "Checking build dependencies..."
-	@command -v git >/dev/null 2>&1 || { echo "Error: git is required but not installed"; exit 1; }
-	@command -v cmake >/dev/null 2>&1 || { echo "Error: cmake is required but not installed"; exit 1; }
-	@command -v $(CXX) >/dev/null 2>&1 || { echo "Error: $(CXX) is required but not installed"; exit 1; }
-	@if [ -z "$(JAVA_HOME)" ]; then echo "Error: JAVA_HOME not set"; exit 1; fi
-	@if [ ! -d "$(JAVA_HOME)" ]; then echo "Error: JAVA_HOME directory does not exist: $(JAVA_HOME)"; exit 1; fi
-	@echo "All dependencies found!"
-
-# Help
-help:
-	@echo "Available targets:"
-	@echo "  all          - Build the JNI library (default)"
-	@echo "  clean        - Clean all build artifacts including OGDF"
-	@echo "  clean-jni    - Clean only JNI artifacts (keep OGDF)"
-	@echo "  rebuild-ogdf - Force rebuild of OGDF"
-	@echo "  check-deps   - Check build dependencies"
-	@echo "  help         - Show this help"
-	@echo ""
-	@echo "The build process will:"
-	@echo "  1. Download OGDF $(OGDF_VERSION) from GitHub"
-	@echo "  2. Build OGDF with CMake and install it"
-	@echo "  3. Compile and link the JNI wrapper"
-	@echo "  4. Copy the native lib into target/classes/native (so Maven includes it)"
-
-.PHONY: all clean clean-jni rebuild-ogdf check-deps help
+.PHONY: all clean
