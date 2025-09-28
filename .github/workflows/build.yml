@@ -59,17 +59,18 @@ jobs:
             make
             mingw-w64-x86_64-gcc
             mingw-w64-x86_64-zlib
+            mingw-w64-x86_64-cmake   # 🔑 kell a cmake!
             binutils
       - name: Build native (Windows)
         shell: msys2 {0}
         run: |
-          cd src/main/native
-          make clean all
+          echo "JAVA_HOME=$JAVA_HOME"
+          make -C src/main/native
       - name: Upload Windows native
         uses: actions/upload-artifact@v4
         with:
           name: windows-native
-          path: target/classes/native/bandagelayout.dll
+          path: src/main/native/build/bandagelayout.dll
 
   merge-and-deploy:
     runs-on: ubuntu-latest

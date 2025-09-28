@@ -105,7 +105,7 @@ layout.layoutLinear(graph, LayoutQuality.HIGH);
 
 ### Automatic Build Process
 The build system will:
-1. 📥 **Download OGDF** (v2023.09) from GitHub  
+1. 📥 **Download OGDF** (latest-release branch) from GitHub  
 2. 🏗️ **Build OGDF** with Bandage-compatible settings  
 3. 🔗 **Compile & link JNI wrapper** against OGDF  
 4. 📦 **Produce native lib** (`.so` / `.dylib` / `.dll`)  
