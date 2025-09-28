@@ -123,4 +123,13 @@ clean:
 	rm -rf $(BUILD_DIR)
 	rm -rf $(TARGET_NATIVE_DIR)
 
-.PHONY: all clean
+check-deps:
+	@echo "Checking build dependencies..."
+	@command -v git >/dev/null 2>&1 || { echo "Error: git is required but not installed"; exit 1; }
+	@command -v cmake >/dev/null 2>&1 || { echo "Error: cmake is required but not installed"; exit 1; }
+	@command -v $(CXX) >/dev/null 2>&1 || { echo "Error: $(CXX) is required but not installed"; exit 1; }
+	@if [ -z "$(JAVA_HOME)" ]; then echo "Error: JAVA_HOME not set"; exit 1; fi
+	@if [ ! -d "$(JAVA_HOME)" ]; then echo "Error: JAVA_HOME directory does not exist: $(JAVA_HOME)"; exit 1; fi
+	@echo "All dependencies found!"
+
+.PHONY: all clean check-deps
