@@ -61,10 +61,14 @@ OGDF_INCLUDES = -I$(OGDF_INSTALL_DIR)/include \
                 -I$(OGDF_SOURCE_DIR)/include \
                 -I$(OGDF_BUILD_DIR)/include
 
-OGDF_LIBS = -L$(OGDF_INSTALL_DIR)/lib \
-            -L$(OGDF_INSTALL_DIR)/lib64 \
-            -L$(OGDF_INSTALL_DIR)/lib/x86_64-linux-gnu \
-            -lOGDF
+ifeq ($(PLATFORM),windows)
+    OGDF_LIBS = $(OGDF_INSTALL_DIR)/lib/OGDF.lib
+else
+    OGDF_LIBS = -L$(OGDF_INSTALL_DIR)/lib \
+                -L$(OGDF_INSTALL_DIR)/lib64 \
+                -L$(OGDF_INSTALL_DIR)/lib/x86_64-linux-gnu \
+                -lOGDF
+endif
 
 # Source files
 JNI_SOURCES = src/BandageLayoutJNI.cpp
