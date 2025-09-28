@@ -7,7 +7,7 @@ ifeq ($(OS),Windows_NT)
     PLATFORM = windows
     CXX = g++
     JNI_LIB = bandagelayout.dll
-    CXXFLAGS = -std=c++17 -fPIC -O2 -DNDEBUG -Wall
+    CXXFLAGS = -std=c++17 -O2 -DNDEBUG -Wall
     LDFLAGS = -shared -static-libgcc -static-libstdc++
     CMAKE_GENERATOR = "MinGW Makefiles"
 else ifeq ($(UNAME_S),Linux)
@@ -58,7 +58,10 @@ endif
 
 # OGDF includes and libraries
 OGDF_INCLUDES = -I$(OGDF_INSTALL_DIR)/include
-OGDF_LIBS = -L$(OGDF_INSTALL_DIR)/lib -L$(OGDF_INSTALL_DIR)/lib/x86_64-linux-gnu -lOGDF
+OGDF_LIBS = -L$(OGDF_INSTALL_DIR)/lib \
+            -L$(OGDF_INSTALL_DIR)/lib64 \
+            -L$(OGDF_INSTALL_DIR)/lib/x86_64-linux-gnu \
+            -lOGDF
 
 # Source files
 JNI_SOURCES = src/BandageLayoutJNI.cpp
@@ -84,9 +87,11 @@ $(OGDF_INSTALL_DIR)/lib/libOGDF.a: $(OGDF_SOURCE_DIR)
 	@mkdir -p $(OGDF_BUILD_DIR)
 	@cd $(OGDF_BUILD_DIR) && \
 		cmake -G $(CMAKE_GENERATOR) \
+			$(if $(filter $(PLATFORM),windows),-DCMAKE_MAKE_PROGRAM=mingw32-make,) \
 			-DCMAKE_BUILD_TYPE=Release \
 			-DCMAKE_INSTALL_PREFIX=$(abspath $(OGDF_INSTALL_DIR)) \
 			-DCMAKE_CXX_STANDARD=17 \
+			-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
 			-DOGDF_USE_COIN=OFF \
 			-DOGDF_MEMORY_POOL_NTS=ON \
 			$(abspath $(OGDF_SOURCE_DIR))
@@ -152,7 +157,7 @@ help:
 	@echo ""
 	@echo "The build process will:"
 	@echo "  1. Download OGDF $(OGDF_VERSION) from GitHub"
-	@echo "  2. Build OGDF with CMake"
+	@echo "  2. Build OGDF with CMake (PIC enabled for shared libs)"
 	@echo "  3. Compile and link the JNI wrapper"
 	@echo "  4. Copy the native lib into target/classes/native (so Maven includes it)"
 
