@@ -90,11 +90,11 @@ public final class BandageLayoutInitializer {
 
         final String libResource;
         if (osKey.startsWith("windows")) {
-            libResource = NATIVES_BASE + osKey + "/" + LIB_NAME + DLL_EXT;
+            libResource = NATIVES_BASE + "/" + LIB_NAME + DLL_EXT;
         } else if (osKey.startsWith("macos")) {
-            libResource = NATIVES_BASE + osKey + "/lib" + LIB_NAME + DYLIB_EXT;
+            libResource = NATIVES_BASE + "/lib" + LIB_NAME + DYLIB_EXT;
         } else {
-            libResource = NATIVES_BASE + osKey + "/lib" + LIB_NAME + SO_EXT;
+            libResource = NATIVES_BASE + "/lib" + LIB_NAME + SO_EXT;
         }
 
         // 3. Extract from JAR
