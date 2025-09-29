@@ -59,9 +59,7 @@ else ifeq ($(PLATFORM),windows)
 endif
 
 # OGDF includes and libraries
-OGDF_INCLUDES = -I$(OGDF_BUILD_DIR)/include \
-                -I$(OGDF_SOURCE_DIR)/include \
-                -I$(OGDF_BUILD_DIR)/include/ogdf/basic/internal
+OGDF_INCLUDES = -I$(OGDF_BUILD_DIR)/include -I$(OGDF_SOURCE_DIR)/include
 
 ifeq ($(PLATFORM),windows)
     # Windows builds produce libOGDF.dll.a OR libOGDF.a
