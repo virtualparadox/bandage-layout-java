@@ -1,4 +1,5 @@
-# Self-contained OGDF JNI Build for Bandage Layout (2025 edition)
+# Self-contained OGDF JNI Build for Bandage Layout
+# This Makefile automatically downloads and builds OGDF from source
 
 # Detect platform
 UNAME_S := $(shell uname -s)
@@ -9,7 +10,7 @@ ifeq ($(OS),Windows_NT)
     CXXFLAGS = -std=c++17 -O2 -DNDEBUG -Wall
     LDFLAGS = -shared -static-libgcc -static-libstdc++
     CMAKE_GENERATOR = "MinGW Makefiles"
-    MAKE_CMD = mingw32-make
+    MAKE_CMD = mingw32-make -j4
 else ifeq ($(UNAME_S),Linux)
     PLATFORM = linux
     CXX = g++
@@ -17,7 +18,7 @@ else ifeq ($(UNAME_S),Linux)
     CXXFLAGS = -std=c++17 -fPIC -O2 -DNDEBUG -Wall
     LDFLAGS = -shared
     CMAKE_GENERATOR = "Unix Makefiles"
-    MAKE_CMD = make
+    MAKE_CMD = make -j4
 else ifeq ($(UNAME_S),Darwin)
     PLATFORM = osx
     CXX = clang++
@@ -25,7 +26,7 @@ else ifeq ($(UNAME_S),Darwin)
     CXXFLAGS = -std=c++17 -fPIC -O2 -DNDEBUG -Wall
     LDFLAGS = -shared -undefined dynamic_lookup
     CMAKE_GENERATOR = "Unix Makefiles"
-    MAKE_CMD = make
+    MAKE_CMD = make -j4
 endif
 
 # Directories
@@ -36,7 +37,7 @@ OGDF_INSTALL_DIR = $(BUILD_DIR)/ogdf-install
 TARGET_NATIVE_DIR = ../../../target/classes/native
 
 # OGDF version and URL
-OGDF_VERSION = master
+OGDF_VERSION = latest-release
 OGDF_URL = https://github.com/ogdf/ogdf.git
 
 # JAVA_HOME detection
@@ -62,9 +63,10 @@ endif
 OGDF_INCLUDES = -I$(OGDF_BUILD_DIR)/include/ogdf-release -I$(OGDF_SOURCE_DIR)/include
 
 ifeq ($(PLATFORM),windows)
-    OGDF_LIBS = $(OGDF_BUILD_DIR)/OGDF.lib
+    # Windows builds produce libOGDF.dll + libOGDF.dll.a
+    OGDF_LIBS = $(OGDF_BUILD_DIR)/libOGDF.dll.a
 else
-    OGDF_LIBS = -L$(OGDF_BUILD_DIR) -lOGDF
+    OGDF_LIBS = -L$(OGDF_BUILD_DIR) -lOGDF -lCOIN
 endif
 
 # Source files
@@ -75,7 +77,7 @@ JNI_OBJECTS = $(BUILD_DIR)/BandageLayoutJNI.o
 all: $(BUILD_DIR)/$(JNI_LIB)
 	@echo "Build completed: $(JNI_LIB)"
 
-# Download OGDF
+# Download OGDF from Git
 $(OGDF_SOURCE_DIR):
 	@echo "Downloading OGDF $(OGDF_VERSION) from Git..."
 	@mkdir -p $(BUILD_DIR)
@@ -85,40 +87,37 @@ $(OGDF_SOURCE_DIR):
 		echo "OGDF source already exists"; \
 	fi
 
-# Build OGDF (without COIN, no tests/examples)
-$(OGDF_BUILD_DIR)/OGDF.lib $(OGDF_BUILD_DIR)/libOGDF.a: $(OGDF_SOURCE_DIR)
+# Build OGDF
+$(OGDF_BUILD_DIR)/libOGDF.dll.a $(OGDF_BUILD_DIR)/libOGDF.a: $(OGDF_SOURCE_DIR)
 	@echo "Building OGDF..."
 	@mkdir -p $(OGDF_BUILD_DIR)
 	@cd $(OGDF_BUILD_DIR) && \
 		cmake -G $(CMAKE_GENERATOR) \
 			-DCMAKE_BUILD_TYPE=Release \
-			-DCMAKE_INSTALL_PREFIX=$(abspath $(OGDF_INSTALL_DIR)) \
 			-DCMAKE_CXX_STANDARD=17 \
 			-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
-			-DBUILD_SHARED_LIBS=ON \
-			-DOGDF_SEPARATE_TESTS=OFF \
-			-DOGDF_WARNING_ERRORS=OFF \
 			$(abspath $(OGDF_SOURCE_DIR))
-	@cd $(OGDF_BUILD_DIR) && $(MAKE_CMD) -j$(shell nproc 2>/dev/null || echo 4)
+	@cd $(OGDF_BUILD_DIR) && $(MAKE_CMD)
 	@echo "OGDF build completed!"
 
 # Compile JNI wrapper
-$(JNI_OBJECTS): $(JNI_SOURCES) | $(OGDF_BUILD_DIR)/OGDF.lib $(BUILD_DIR)
+$(JNI_OBJECTS): $(JNI_SOURCES) $(OGDF_BUILD_DIR)/libOGDF.dll.a | $(BUILD_DIR)
 	@echo "Compiling JNI wrapper..."
 	$(CXX) $(CXXFLAGS) $(JNI_INCLUDES) $(OGDF_INCLUDES) \
 		-c $(JNI_SOURCES) -o $(JNI_OBJECTS)
 
-# Link JNI library
+# Link library
 $(BUILD_DIR)/$(JNI_LIB): $(JNI_OBJECTS)
 	@echo "Linking JNI library..."
-	$(CXX) $(LDFLAGS) $(JNI_OBJECTS) $(OGDF_LIBS) -o $(BUILD_DIR)/$(JNI_LIB)
+	$(CXX) $(LDFLAGS) $(JNI_OBJECTS) $(OGDF_LIBS) \
+		-o $(BUILD_DIR)/$(JNI_LIB)
 
-	# Copy into Maven target/classes/native
+	# Copy to Maven target/classes/native directory
 	mkdir -p $(TARGET_NATIVE_DIR)
 	cp $(BUILD_DIR)/$(JNI_LIB) $(TARGET_NATIVE_DIR)/
 	@echo "JNI library copied to $(TARGET_NATIVE_DIR): $(JNI_LIB)"
 
-# Clean all
+# Clean everything including OGDF
 clean:
 	rm -rf $(BUILD_DIR)
 	rm -rf $(TARGET_NATIVE_DIR)
