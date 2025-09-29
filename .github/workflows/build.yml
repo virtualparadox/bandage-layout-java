@@ -45,11 +45,13 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
+
       - name: Install MSYS2 and dependencies
         uses: msys2/setup-msys2@v2
         with:
@@ -62,9 +64,13 @@ jobs:
             mingw-w64-x86_64-cmake
             mingw-w64-x86_64-make
             binutils
-      - name: Build native (Windows)
-        shell: msys2 {0}
+
+      - name: Add MSYS2 to PATH
+        run: echo "C:\msys64\usr\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Build native (Windows, Maven)
         run: mvn -B -Pnative -DskipTests package
+
       - name: Upload Windows native
         uses: actions/upload-artifact@v4
         with:
