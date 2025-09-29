@@ -26,7 +26,7 @@ To use **Bandage Layout JNI** in your project, add the dependency:
 <dependency>
     <groupId>eu.virtualparadox</groupId>
     <artifactId>bandage-layout-jni</artifactId>
-    <version>1.0.0</version>
+    <version>1.1.1</version>
 </dependency>
 ```
 
