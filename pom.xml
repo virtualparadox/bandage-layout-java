@@ -241,8 +241,11 @@
                                     <goal>exec</goal>
                                 </goals>
                                 <configuration>
-                                    <executable>${project.basedir}/build-native.sh</executable>
+                                    <executable>bash</executable>
                                     <workingDirectory>${project.basedir}</workingDirectory>
+                                    <arguments>
+                                        <argument>${project.basedir}/build-native.sh</argument>
+                                    </arguments>
                                 </configuration>
                             </execution>
                         </executions>
