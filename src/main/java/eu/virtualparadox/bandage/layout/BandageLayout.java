@@ -14,11 +14,13 @@ import java.util.Map;
 public class BandageLayout {
 
     // Native method declaration
-    private native float[] layoutGraph(
+    public native float[] layoutGraph(
             int[] nodeIndices,
             int[] edgeSources,
             int[] edgeTargets,
             float[] edgeWeights,
+            float[] nodeWidths,
+            float[] nodeHeights,
             int numNodes,
             int numEdges,
             int quality,
@@ -43,19 +45,25 @@ public class BandageLayout {
             return;
         }
 
+        // Fill node data
         final int numNodes = nodes.size();
-        final int numEdges = edges.size();
 
-        // Create node index mapping
+        final float[] nodeWidths = new float[numNodes];
+        final float[] nodeHeights = new float[numNodes];
+
         final Map<BandageNode, Integer> nodeIndexMap = new HashMap<>();
         final int[] nodeIndices = new int[numNodes];
         for (int i = 0; i < numNodes; i++) {
             final BandageNode node = nodes.get(i);
             nodeIndexMap.put(node, i);
             nodeIndices[i] = i;
+            nodeWidths[i] = node.getWidth();
+            nodeHeights[i] = node.getHeight();
         }
 
         // Prepare edge data
+        final int numEdges = edges.size();
+
         final int[] edgeSources = new int[numEdges];
         final int[] edgeTargets = new int[numEdges];
         final float[] edgeWeights = new float[numEdges];
@@ -74,6 +82,8 @@ public class BandageLayout {
                     edgeSources,
                     edgeTargets,
                     edgeWeights,
+                    nodeWidths,
+                    nodeHeights,
                     numNodes,
                     numEdges,
                     quality.getValue(),

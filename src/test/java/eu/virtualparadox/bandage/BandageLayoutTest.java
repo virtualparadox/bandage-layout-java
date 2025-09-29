@@ -9,17 +9,15 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
-
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Test class for BandageLayout
  */
-public class BandageLayoutTest {
+class BandageLayoutTest {
 
     @BeforeAll
-    static void setUp() throws IOException {
+    static void setUp() {
         BandageLayoutInitializer.initialize();
     }
 
@@ -53,7 +51,7 @@ public class BandageLayoutTest {
     @Test
     @DisplayName("Model classes should store and update node attributes correctly")
     void testModelClasses() {
-        final BandageNode node = new BandageNode("test-node", 10.0, 20.0, 30.0, 40.0);
+        final BandageNode node = new BandageNode("test-node", 10.0f, 20.0f, 30.0f, 40.0f);
 
         assertEquals("test-node", node.getId(), "Node ID should match constructor argument");
         assertEquals(10.0, node.getX(), "Node X coordinate should match constructor argument");
@@ -61,7 +59,7 @@ public class BandageLayoutTest {
         assertEquals(30.0, node.getWidth(), "Node width should match constructor argument");
         assertEquals(40.0, node.getHeight(), "Node height should match constructor argument");
 
-        node.setPosition(50.0, 60.0);
+        node.setPosition(50.0f, 60.0f);
         assertEquals(50.0, node.getX(), "Node X coordinate should be updated by setPosition()");
         assertEquals(60.0, node.getY(), "Node Y coordinate should be updated by setPosition()");
     }

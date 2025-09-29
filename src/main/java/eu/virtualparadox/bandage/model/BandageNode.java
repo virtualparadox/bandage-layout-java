@@ -5,16 +5,16 @@ package eu.virtualparadox.bandage.model;
  */
 public class BandageNode {
     private String id;
-    private double x;
-    private double y;
-    private double width;
-    private double height;
+    private float x;
+    private float y;
+    private float width;
+    private float height;
 
     public BandageNode(String id) {
-        this(id, 0.0, 0.0, 10.0, 10.0);
+        this(id, 0.0f, 0.0f, 10.0f, 10.0f);
     }
 
-    public BandageNode(String id, double x, double y, double w, double h) {
+    public BandageNode(String id, float x, float y, float w, float h) {
         this.id = id;
         this.x = x;
         this.y = y;
@@ -34,16 +34,16 @@ public class BandageNode {
         return y;
     }
 
-    public void setPosition(double x, double y) {
+    public void setPosition(float x, float y) {
         this.x = x;
         this.y = y;
     }
 
-    public double getWidth() {
+    public float getWidth() {
         return width;
     }
 
-    public double getHeight() {
+    public float getHeight() {
         return height;
     }
 }
