@@ -17,7 +17,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - name: Build native (Linux)
-        run: mvn -B -DskipTests package
+        run: mvn -B -Pnative -DskipTests package
       - name: Upload Linux native
         uses: actions/upload-artifact@v4
         with:
@@ -34,7 +34,7 @@ jobs:
           distribution: temurin
           java-version: 21
       - name: Build native (macOS)
-        run: mvn -B -DskipTests package
+        run: mvn -B -Pnative -DskipTests package
       - name: Upload macOS native
         uses: actions/upload-artifact@v4
         with:
@@ -64,21 +64,12 @@ jobs:
             binutils
       - name: Build native (Windows)
         shell: msys2 {0}
-        run: |
-          echo "JAVA_HOME=$JAVA_HOME"
-          make -C src/main/native
-      - name: List OGDF build tree (Windows)
-        if: always()
-        shell: msys2 {0}
-        run: |
-          echo "=== Full OGDF build tree ==="
-          ls -R src/main/native/build/ogdf-install || true
-          ls -R src/main/native/build/ogdf-build || true
+        run: mvn -B -Pnative -DskipTests package
       - name: Upload Windows native
         uses: actions/upload-artifact@v4
         with:
           name: windows-native
-          path: src/main/native/build/bandagelayout.dll
+          path: target/classes/native/bandagelayout.dll
 
   merge-and-deploy:
     runs-on: ubuntu-latest
@@ -117,7 +108,7 @@ jobs:
       - name: Verify natives
         run: ls -R target/classes/native
 
-      - name: Build fat JAR
+      - name: Build fat JAR (without native build)
         run: mvn -B package -DskipTests
 
       - name: Upload JAR
@@ -126,7 +117,6 @@ jobs:
           name: bandage-layout-jni
           path: target/bandage-layout-jni-*.jar
 
-      # 🔑 GPG key import for release
       - name: Import GPG key
         if: startsWith(github.ref, 'refs/tags/')
         run: echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
