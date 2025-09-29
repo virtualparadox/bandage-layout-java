@@ -1,16 +1,11 @@
 package eu.virtualparadox.bandage.model;
 
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Simple graph data structure
  */
-@Data
-@Slf4j
 public class BandageGraph {
     private List<BandageNode> nodes = new ArrayList<>();
     private List<BandageEdge> edges = new ArrayList<>();
@@ -27,7 +22,7 @@ public class BandageGraph {
         addEdge(new BandageEdge(source, target));
     }
 
-    public void addEdge(BandageNode source, BandageNode target, double weight) {
+    public void addEdge(BandageNode source, BandageNode target, float weight) {
         addEdge(new BandageEdge(source, target, weight));
     }
 
@@ -37,5 +32,13 @@ public class BandageGraph {
 
     public int getEdgeCount() {
         return edges.size();
+    }
+
+    public List<BandageNode> getNodes() {
+        return nodes;
+    }
+
+    public List<BandageEdge> getEdges() {
+        return edges;
     }
 }

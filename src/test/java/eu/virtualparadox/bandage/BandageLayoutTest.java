@@ -1,12 +1,15 @@
 package eu.virtualparadox.bandage;
 
 import eu.virtualparadox.bandage.layout.BandageLayout;
+import eu.virtualparadox.bandage.layout.BandageLayoutInitializer;
 import eu.virtualparadox.bandage.layout.LayoutQuality;
 import eu.virtualparadox.bandage.model.BandageGraph;
 import eu.virtualparadox.bandage.model.BandageNode;
-import org.junit.jupiter.api.Assumptions;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,6 +17,11 @@ import static org.junit.jupiter.api.Assertions.*;
  * Test class for BandageLayout
  */
 public class BandageLayoutTest {
+
+    @BeforeAll
+    static void setUp() throws IOException {
+        BandageLayoutInitializer.initialize();
+    }
 
     @Test
     @DisplayName("Basic layout test")
@@ -70,7 +78,7 @@ public class BandageLayoutTest {
         final BandageNode n2 = new BandageNode("B");
         manual.addNode(n1);
         manual.addNode(n2);
-        manual.addEdge(n1, n2, 1.5);
+        manual.addEdge(n1, n2, 1.5f);
 
         assertEquals(2, manual.getNodeCount(), "Manual graph should contain 2 nodes");
         assertEquals(1, manual.getEdgeCount(), "Manual graph should contain 1 edge");
@@ -89,18 +97,8 @@ public class BandageLayoutTest {
     }
 
     @Test
-    @DisplayName("BandageLayout.isAvailable should run without exception")
-    void testLayoutAvailability() {
-        assertDoesNotThrow(BandageLayout::isAvailable,
-                "Calling BandageLayout.isAvailable() should never throw an exception");
-    }
-
-    @Test
     @DisplayName("Layout should modify node positions if native library is available")
     void testLayoutFunctionality() {
-        Assumptions.assumeTrue(BandageLayout.isAvailable(),
-                "Native library not available, skipping layout test");
-
         final BandageGraph graph = createTestGraph();
         final BandageLayout layout = new BandageLayout();
 
@@ -117,10 +115,6 @@ public class BandageLayoutTest {
                 (Math.abs(finalY - initialY) > 0.1);
 
         assertTrue(changed, "Expected node positions to change after running the layout algorithm");
-    }
-
-    static boolean isNativeLibraryAvailable() {
-        return BandageLayout.isAvailable();
     }
 
     /**

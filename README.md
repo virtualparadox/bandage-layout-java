@@ -52,6 +52,9 @@ mvn clean compile
 import eu.virtualparadox.bandage.model.*;
 import eu.virtualparadox.bandage.layout.*;
 
+// Init
+BandageLayoutInitializer.initialize();
+
 // Create a small graph
 BandageGraph graph = new BandageGraph();
 BandageNode n1 = new BandageNode("A");
@@ -142,4 +145,4 @@ mvn test
 
 ---
 
-Made with ❤️ by **Virtual Paradox Bt.** – bringing Bandage layouts to the Java world.
+Made with ❤️ by **Virtual Paradox** – bringing Bandage layouts to the Java world.
