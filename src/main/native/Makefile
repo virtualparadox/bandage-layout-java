@@ -95,16 +95,18 @@ $(OGDF_SOURCE_DIR):
 
 # Build OGDF
 $(OGDF_BUILD_DIR)/libOGDF.a: $(OGDF_SOURCE_DIR)
-	@echo "⚙️ Building OGDF..."
+	@echo "Building OGDF..."
 	@mkdir -p $(OGDF_BUILD_DIR)
 	@cd $(OGDF_BUILD_DIR) && \
 		cmake -G $(CMAKE_GENERATOR) \
 			-DCMAKE_BUILD_TYPE=Release \
 			-DCMAKE_CXX_STANDARD=17 \
 			-DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+			-DCMAKE_INSTALL_PREFIX=$(abspath $(OGDF_BUILD_DIR)) \
 			$(abspath $(OGDF_SOURCE_DIR))
 	@cd $(OGDF_BUILD_DIR) && $(MAKE_CMD)
-	@echo "✅ OGDF build completed!"
+	@cd $(OGDF_BUILD_DIR) && $(MAKE_CMD) install
+	@echo "OGDF build + install completed!"
 
 # Compile JNI wrapper
 $(JNI_OBJECTS): $(JNI_SOURCES) $(OGDF_BUILD_DIR)/libOGDF.a | $(BUILD_DIR)
